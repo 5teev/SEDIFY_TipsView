@@ -19,6 +19,8 @@
 
 - (NSString *) msgForNum:(int)msgNumber;
 - (CGPoint) pointForNum:(int)msgNumber;
+- (CGPoint) originForNum:(int)msgNumber;
+- (float) widthForNum:(int)msgNumber;
 - (UIBezierPath *) pathForMsgNum:(int)msgNumber;
 
 @end

@@ -70,7 +70,8 @@
 	int cnt = [[msgDict objectForKey:@"tipsList"] count];
 	if ( msgNum >= cnt )
 	{
-		[self removeFromSuperview];
+		[self removeFromSuperview]; // NOTE: not released! View still uses memory!
+									// TODO: send message to a delegate to actually release this class
 		return;
 	}
 
@@ -148,20 +149,72 @@
 		// (nothing else is meaningful; configure accordingly in Tips.plist)
 		if ( myPoint.x < myRect.origin.x )
 		{
-			[path moveToPoint:CGPointMake(myRect.origin.x , (myRect.origin.y + myRect.size.height/2 - kCornerRadius/2) )];
-			[path addLineToPoint:myPoint];
-			[path addLineToPoint:CGPointMake(myRect.origin.x , (myRect.origin.y + myRect.size.height/2 + kCornerRadius/2) )];
+			if ( myPoint.y < (msgLabel.frame.origin.y + msgLabel.frame.size.height/4 ) )
+			{
+				[path moveToPoint:CGPointMake(myRect.origin.x , (myRect.origin.y + kCornerRadius) )];
+				[path addLineToPoint:myPoint];
+				[path addLineToPoint:CGPointMake(myRect.origin.x , (myRect.origin.y + 2*kCornerRadius) )];
+			}
+			else if (myPoint.y < (msgLabel.frame.origin.y + 3*myRect.size.height/4) )
+			{
+				[path moveToPoint:CGPointMake(myRect.origin.x , (myRect.origin.y + myRect.size.height/2 - kCornerRadius/2) )];
+				[path addLineToPoint:myPoint];
+				[path addLineToPoint:CGPointMake(myRect.origin.x , (myRect.origin.y + myRect.size.height/2 + kCornerRadius/2) )];
+			}
+			else
+			{
+				[path moveToPoint:CGPointMake(myRect.origin.x , (myRect.origin.y + myRect.size.height - 2*kCornerRadius) )];
+				[path addLineToPoint:myPoint];
+				[path addLineToPoint:CGPointMake(myRect.origin.x , (myRect.origin.y + myRect.size.height/2 - kCornerRadius) )];
+			}
+
 		}
 		else if (myPoint.x > (myRect.origin.x + myRect.size.width) )
 		{
-			[path moveToPoint:CGPointMake(myRect.origin.x + myRect.size.width , (myRect.origin.y + myRect.size.height/2 - kCornerRadius/2) )];
-			[path addLineToPoint:myPoint];
-			[path addLineToPoint:CGPointMake(myRect.origin.x + myRect.size.width , (myRect.origin.y + myRect.size.height/2 + kCornerRadius/2) )];
+			if ( myPoint.y < (msgLabel.frame.origin.y + msgLabel.frame.size.height/4 ) )
+			{
+				[path moveToPoint:CGPointMake(myRect.origin.x + myRect.size.width , (myRect.origin.y + kCornerRadius) )];
+				[path addLineToPoint:myPoint];
+				[path addLineToPoint:CGPointMake(myRect.origin.x + myRect.size.width , (myRect.origin.y + 2*kCornerRadius) )];
+			}
+			else if (myPoint.y < (myRect.origin.y + 3*myRect.size.height/4) )
+			{
+				[path moveToPoint:CGPointMake(myRect.origin.x + myRect.size.width , (myRect.origin.y + myRect.size.height/2 - kCornerRadius/2) )];
+				[path addLineToPoint:myPoint];
+				[path addLineToPoint:CGPointMake(myRect.origin.x + myRect.size.width , (myRect.origin.y + myRect.size.height/2 + kCornerRadius/2) )];
+			}
+			else
+			{
+				[path moveToPoint:CGPointMake(myRect.origin.x + myRect.size.width , (myRect.origin.y + myRect.size.height - 2*kCornerRadius) )];
+				[path addLineToPoint:myPoint];
+				[path addLineToPoint:CGPointMake(myRect.origin.x + myRect.size.width , (myRect.origin.y + myRect.size.height - kCornerRadius) )];
+			}
 		}
 	}
-	else if ( myPoint.y >= (myOrigin.y + myRect.size.height) )
+	else if ( myPoint.y > (myOrigin.y + myRect.size.height) ) // conditional maybe unnecessary, no other possibility
 	{
-		NSLog(@"point is below msgLabel");
+		if ( myPoint.x <= (msgLabel.frame.origin.x + msgLabel.frame.size.width/4) )
+		{ NSLog(@"first option");
+			[path moveToPoint:CGPointMake(myRect.origin.x + kCornerRadius , myRect.origin.y + myRect.size.height )];
+			[path addLineToPoint:myPoint];
+			[path addLineToPoint:CGPointMake(msgLabel.frame.origin.x + kCornerRadius, myRect.origin.y + myRect.size.height)];
+		}
+		else if ( myPoint.x <= (msgLabel.frame.origin.x + 3*msgLabel.frame.size.width/4) )
+		{ NSLog(@"second option");
+			[path moveToPoint:CGPointMake(myRect.origin.x + myRect.size.width/2 - kCornerRadius/2, myRect.origin.y + myRect.size.height)];
+			[path addLineToPoint:myPoint];
+			[path addLineToPoint:CGPointMake(myRect.origin.x + myRect.size.width/2 + kCornerRadius/2, myRect.origin.y + myRect.size.height)];
+		}
+		else if ( myPoint.x > (msgLabel.frame.origin.x + 3*msgLabel.frame.size.width/4) )
+		{ NSLog(@"third option");
+			[path moveToPoint:CGPointMake(msgLabel.frame.origin.x + msgLabel.frame.size.width - kCornerRadius, myRect.origin.y + myRect.size.height)];
+			[path addLineToPoint:myPoint];
+			[path addLineToPoint:CGPointMake(myRect.origin.x + myRect.size.width - kCornerRadius, myRect.origin.y + myRect.size.height)];
+		}
+		else
+		{
+			NSLog(@"No option");
+		}
 	}
 
 	[path closePath];
