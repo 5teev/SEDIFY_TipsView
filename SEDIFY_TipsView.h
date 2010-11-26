@@ -11,7 +11,14 @@
 
 @interface SEDIFY_TipsView : UIView {
 	UILabel * msgLabel;
+	NSDictionary * msgDict;
+	int msgNum;
 }
 
 @property (assign,nonatomic) NSString * msg;
+
+- (NSString *) msgForNum:(int)msgNumber;
+- (CGPoint) pointForNum:(int)msgNumber;
+- (UIBezierPath *) pathForMsgNum:(int)msgNumber;
+
 @end
