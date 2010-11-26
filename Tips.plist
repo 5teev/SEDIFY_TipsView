@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>tipsList</key>
+	<array>
+		<dict>
+			<key>msg</key>
+			<string>Take a look at this spot: it is notable.</string>
+			<key>xPoint</key>
+			<integer>20</integer>
+			<key>yPoint</key>
+			<integer>20</integer>
+			<key>xBubble</key>
+			<integer>80</integer>
+			<key>yBubble</key>
+			<integer>160</integer>
+			<key>bubbleWidth</key>
+			<integer>120</integer>
+		</dict>
+		<dict>
+			<key>msg</key>
+			<string>This is another interesting spot. Tap it.</string>
+			<key>xPoint</key>
+			<integer>105</integer>
+			<key>yPoint</key>
+			<integer>20</integer>
+			<key>xBubble</key>
+			<integer>50</integer>
+			<key>yBubble</key>
+			<integer>230</integer>
+			<key>bubbleWidth</key>
+			<integer>140</integer>
+		</dict>
+		<dict>
+			<key>msg</key>
+			<string>Yet another interesting spot.</string>
+			<key>xPoint</key>
+			<integer>220</integer>
+			<key>yPoint</key>
+			<integer>20</integer>
+			<key>xBubble</key>
+			<integer>120</integer>
+			<key>yBubble</key>
+			<integer>220</integer>
+			<key>bubbleWidth</key>
+			<integer>120</integer>
+		</dict>
+		<dict>
+			<key>msg</key>
+			<string>This is the long one. Have a look. This is the long one. Have a look. This is the long one. Have a look.</string>
+			<key>xPoint</key>
+			<integer>300</integer>
+			<key>yPoint</key>
+			<integer>120</integer>
+			<key>xBubble</key>
+			<integer>80</integer>
+			<key>yBubble</key>
+			<integer>220</integer>
+			<key>bubbleWidth</key>
+			<integer>190</integer>
+		</dict>
+		<dict>
+			<key>msg</key>
+			<string>This spot is in the middle of the box, to the left.</string>
+			<key>xPoint</key>
+			<integer>20</integer>
+			<key>yPoint</key>
+			<integer>230</integer>
+			<key>xBubble</key>
+			<integer>120</integer>
+			<key>yBubble</key>
+			<integer>220</integer>
+			<key>bubbleWidth</key>
+			<integer>120</integer>
+		</dict>
+		<dict>
+			<key>msg</key>
+			<string>This spot is in the middle of the box, to the left.</string>
+			<key>xPoint</key>
+			<integer>20</integer>
+			<key>yPoint</key>
+			<integer>250</integer>
+			<key>xBubble</key>
+			<integer>150</integer>
+			<key>yBubble</key>
+			<integer>220</integer>
+			<key>bubbleWidth</key>
+			<integer>150</integer>
+		</dict>
+		<dict>
+			<key>msg</key>
+			<string>This spot is toward the top of the box, to the right.</string>
+			<key>xPoint</key>
+			<integer>270</integer>
+			<key>yPoint</key>
+			<integer>230</integer>
+			<key>xBubble</key>
+			<integer>50</integer>
+			<key>yBubble</key>
+			<integer>220</integer>
+			<key>bubbleWidth</key>
+			<integer>150</integer>
+		</dict>
+		<dict>
+			<key>msg</key>
+			<string>This spot is in the middle of the box, to the right.</string>
+			<key>xPoint</key>
+			<integer>270</integer>
+			<key>yPoint</key>
+			<integer>230</integer>
+			<key>xBubble</key>
+			<integer>50</integer>
+			<key>yBubble</key>
+			<integer>190</integer>
+			<key>bubbleWidth</key>
+			<integer>150</integer>
+		</dict>
+		<dict>
+			<key>msg</key>
+			<string>This spot is toward the bottom of the box, to the right.</string>
+			<key>xPoint</key>
+			<integer>270</integer>
+			<key>yPoint</key>
+			<integer>230</integer>
+			<key>xBubble</key>
+			<integer>50</integer>
+			<key>yBubble</key>
+			<integer>170</integer>
+			<key>bubbleWidth</key>
+			<integer>150</integer>
+		</dict>
+		<dict>
+			<key>msg</key>
+			<string>Interesting things below, to the left.</string>
+			<key>xPoint</key>
+			<integer>20</integer>
+			<key>yPoint</key>
+			<integer>320</integer>
+			<key>xBubble</key>
+			<integer>80</integer>
+			<key>yBubble</key>
+			<integer>60</integer>
+			<key>bubbleWidth</key>
+			<integer>120</integer>
+		</dict>
+		<dict>
+			<key>msg</key>
+			<string>Interesting things below center. Take note!</string>
+			<key>xPoint</key>
+			<integer>105</integer>
+			<key>yPoint</key>
+			<integer>320</integer>
+			<key>xBubble</key>
+			<integer>50</integer>
+			<key>yBubble</key>
+			<integer>100</integer>
+			<key>bubbleWidth</key>
+			<integer>140</integer>
+		</dict>
+		<dict>
+			<key>msg</key>
+			<string>Yet another interesting spot, below and to the right.</string>
+			<key>xPoint</key>
+			<integer>220</integer>
+			<key>yPoint</key>
+			<integer>320</integer>
+			<key>xBubble</key>
+			<integer>120</integer>
+			<key>yBubble</key>
+			<integer>100</integer>
+			<key>bubbleWidth</key>
+			<integer>120</integer>
+		</dict>
+	</array>
+</dict>
+</plist>
