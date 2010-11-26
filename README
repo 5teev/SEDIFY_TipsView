@@ -1,0 +1,11 @@
+UITipsView is a drop-in class for iPhone projects, descended from UIView. It is meant to be added as a subview of an application's main view, in order to draw "first-run" help boxes pointing to UI elements visible through its transparent areas.
+
+It uses the following files:
+
+    SEDIFY_TipsView.h
+    SEDIFY_TipsView.m
+    Tips.plist
+
+The first two files define the class. The remaining file Tips.plist contains the definition of each "tip" to be used, including text message, XY-coordinate to point to, XY-coordinate at which to position the bubble containing the message, and a value for the bubble's width in pixels.
+
+The goal is to defer all content and formatting to the .plist file, and require no editing of the class header/implementation files themselves.
