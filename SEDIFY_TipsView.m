@@ -13,6 +13,7 @@
 
 @implementation SEDIFY_TipsView
 
+@synthesize delegate;
 @synthesize msg;
 
 - (id)initWithFrame:(CGRect)frame {
@@ -24,20 +25,18 @@
 
 - (void) awakeFromNib
 {
+	[self setBackgroundColor:[UIColor clearColor]]; // this transparency allows the view underneath to show through wherever we don't explicitly draw something
+	[self setBackgroundColor:[UIColor colorWithRed:1 green:0.4 blue:0.2 alpha:0.7]]; // this transparency allows the view underneath to show through wherever we don't explicitly draw something
 	msgNum = 0;
+	includeShadow = YES; // set to NO to disable shadow (or set kShadowOffset to 0)
 	msgDict = [[NSDictionary alloc] initWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"Tips" ofType:@"plist"]];
-//	NSLog(@"Tips NSDictionary should load:\n%@", msgDict);
-	CGRect labelRect = CGRectMake((320 - 200)/2, (460 - 200)/2, 200, 20);
+
+	CGRect labelRect = CGRectMake(0, 0, 50, 20); // this will all be modified by setMessage
 	msgLabel = [[UILabel alloc] initWithFrame:labelRect];
 	[self addSubview:msgLabel];
-	msgLabel.text = [self msgForNum:msgNum];
-	msgLabel.lineBreakMode = UILineBreakModeWordWrap;
-	msgLabel.textAlignment = UITextAlignmentLeft;
-	msgLabel.numberOfLines = 0;// expands to fit
-	[msgLabel sizeToFit];
-	msgLabel.backgroundColor = [UIColor whiteColor];
 
-	[self setBackgroundColor:[UIColor clearColor]];
+	// set first message
+	[self setMessage];
 }
 
 - (void)dealloc {
@@ -46,15 +45,16 @@
     [super dealloc];
 }
 
-/* */
-// Only override drawRect: if you perform custom drawing.
-// An empty implementation adversely affects performance during animation.
-- (void)drawRect:(CGRect)rect {
-    // Drawing code
+- (void)drawRect:(CGRect)rect
+{
 	[[UIColor whiteColor] set];
-	[[UIColor blackColor] setStroke];
-	CGContextRef theContext = UIGraphicsGetCurrentContext();
-	CGContextSetShadow(theContext, CGSizeMake(kShadowOffset,kShadowOffset), 2*kShadowOffset);
+	[[UIColor blackColor] setStroke]; // stroke never used, see description for pathForMsgNum:
+
+	if ( includeShadow )
+	{
+		CGContextRef theContext = UIGraphicsGetCurrentContext();
+		CGContextSetShadow(theContext, CGSizeMake(kShadowOffset,kShadowOffset), 2*kShadowOffset);
+	}
 
 	UIBezierPath * path = [self pathForMsgNum:msgNum];
 	[path fill];
@@ -71,20 +71,18 @@
 	if ( msgNum >= cnt )
 	{
 		[self removeFromSuperview]; // NOTE: not released! View still uses memory!
-									// TODO: send message to a delegate to actually release this class
+		[self.delegate tipsViewDidFinish:self]; // send message to a delegate to actually release this view
 		return;
 	}
 
-	[msgLabel setFrame:CGRectMake(0, 0, [self widthForNum:msgNum], 50)];
-	msgLabel.text = [self msgForNum:msgNum];
-	msgLabel.numberOfLines = 0;
-	[msgLabel sizeToFit];
+	[self setMessage];
+
 	[self setNeedsDisplay];
 
 }
 
 #pragma mark -
-#pragma mark Helpers
+#pragma mark plist file parsing
 - (NSString *) msgForNum:(int)msgNumber
 {
 	return [[[msgDict objectForKey:@"tipsList"] objectAtIndex:msgNumber] objectForKey:@"msg"];
@@ -109,111 +107,138 @@
 	return [[[[msgDict objectForKey:@"tipsList"] objectAtIndex:msgNumber] objectForKey:@"bubbleWidth"] floatValue];
 }
 
+#pragma mark -
+#pragma mark bubble methods
+- (void) setMessage
+{
+	[msgLabel setFrame:CGRectMake(0, 0, [self widthForNum:msgNum], 50)];
+	// only width setting matters here, other details are reset by other methods
+	
+	msgLabel.text = [self msgForNum:msgNum];
+	msgLabel.lineBreakMode = UILineBreakModeWordWrap;
+	msgLabel.textAlignment = UITextAlignmentLeft;
+	msgLabel.numberOfLines = 0; // forces UILabel to necessary number of lines
+	[msgLabel sizeToFit]; // adjusts height; width is set by setFrame: above
+}
 - (UIBezierPath *) pathForMsgNum:(int)msgNumber
 {
-	CGPoint myOrigin = [self originForNum:msgNum];
-	[msgLabel setFrame:CGRectMake(myOrigin.x, myOrigin.y, msgLabel.frame.size.width, msgLabel.frame.size.height)];
-	CGRect myRect = CGRectInset(msgLabel.frame, -kCornerRadius, -kCornerRadius);
-	CGPoint myPoint = [self pointForNum:msgNum];
-//	UIBezierPath * path = [UIBezierPath bezierPathWithRect:myRect];
-	UIBezierPath * path = [UIBezierPath bezierPathWithRoundedRect:myRect cornerRadius:(CGFloat)kCornerRadius];
+/*	msgNumber is the nth dictionary item in the file Tips.plist
+ 
+	The plan here is to get the current size of the text's UILabel (msgLabel)
+	and draw a rounded-rect around it, padded by constant kCornerRadius,
+	which is defined at the top of this file. Then add a line from the rounded-rect
+	to the target POI (Point of Interest) and another line from the POI back to
+	the rounded-rect.
+ 
+	NOTE: this path is designed for filling, not stroking, as a stroke will also trace
+	the space between the lines to/from the POI.
+ */
+	CGPoint	thisOrigin = [self originForNum:msgNum];
+	CGSize	msgLabelSize = msgLabel.frame.size;
+	[msgLabel setFrame:CGRectMake(thisOrigin.x, thisOrigin.y, msgLabelSize.width, msgLabelSize.height)];
+
+	CGPoint	msgLabelOrigin = msgLabel.frame.origin;
+
+	CGRect	roundedRect = CGRectInset(msgLabel.frame, -kCornerRadius, -kCornerRadius);
+	CGPoint poiPoint = [self pointForNum:msgNum]; // POI == Point of Interest, i.e., where tip bubble points
 	
-	if ( myPoint.y < myOrigin.y ) // point is above origin of msgLabel
+	UIBezierPath * path = [UIBezierPath bezierPathWithRoundedRect:roundedRect cornerRadius:(CGFloat)kCornerRadius];
+	
+	if ( poiPoint.y < thisOrigin.y ) // point is above origin of msgLabel
 	{
-		if ( myPoint.x <= (msgLabel.frame.origin.x + msgLabel.frame.size.width/4) )
-		{ NSLog(@"first option");
-			[path moveToPoint:CGPointMake(myRect.origin.x + kCornerRadius , myRect.origin.y)];
-			[path addLineToPoint:myPoint];
-			[path addLineToPoint:CGPointMake(msgLabel.frame.origin.x + kCornerRadius, myRect.origin.y)];
+		if ( poiPoint.x <= (msgLabelOrigin.x + msgLabelSize.width/4) ) // above, left of 1/4 way across msgLabel
+		{
+			[path moveToPoint:CGPointMake(roundedRect.origin.x + kCornerRadius , roundedRect.origin.y)];
+			[path addLineToPoint:poiPoint];
+			[path addLineToPoint:CGPointMake(msgLabelOrigin.x + kCornerRadius, roundedRect.origin.y)];
 		}
-		else if ( myPoint.x <= (msgLabel.frame.origin.x + 3*msgLabel.frame.size.width/4) )
-		{ NSLog(@"second option");
-			[path moveToPoint:CGPointMake(myRect.origin.x + myRect.size.width/2 - kCornerRadius/2, myRect.origin.y)];
-			[path addLineToPoint:myPoint];
-			[path addLineToPoint:CGPointMake(myRect.origin.x + myRect.size.width/2 + kCornerRadius/2, myRect.origin.y)];
+		else if ( poiPoint.x <= (msgLabelOrigin.x + 3*msgLabelSize.width/4) )
+		{
+			[path moveToPoint:CGPointMake(roundedRect.origin.x + roundedRect.size.width/2 - kCornerRadius/2, roundedRect.origin.y)];
+			[path addLineToPoint:poiPoint];
+			[path addLineToPoint:CGPointMake(roundedRect.origin.x + roundedRect.size.width/2 + kCornerRadius/2, roundedRect.origin.y)];
 		}
-		else if ( myPoint.x > (msgLabel.frame.origin.x + 3*msgLabel.frame.size.width/4) )
-		{ NSLog(@"third option");
-			[path moveToPoint:CGPointMake(msgLabel.frame.origin.x + msgLabel.frame.size.width - kCornerRadius, myRect.origin.y)];
-			[path addLineToPoint:myPoint];
-			[path addLineToPoint:CGPointMake(myRect.origin.x + myRect.size.width - kCornerRadius, myRect.origin.y)];
+		else if ( poiPoint.x > (msgLabelOrigin.x + 3*msgLabelSize.width/4) )
+		{
+			[path moveToPoint:CGPointMake(msgLabelOrigin.x + msgLabelSize.width - kCornerRadius, roundedRect.origin.y)];
+			[path addLineToPoint:poiPoint];
+			[path addLineToPoint:CGPointMake(roundedRect.origin.x + roundedRect.size.width - kCornerRadius, roundedRect.origin.y)];
 		}
 		else
 		{
-			NSLog(@"No option");
+			NSAssert(NO, @"This block should be logically unreachable.");
 		}
 	}
-	else if (myPoint.y >= myOrigin.y && (myPoint.y <= (myOrigin.y+msgLabel.frame.size.height) ) ) // point is within vertical space of msgLabel
+	else if (poiPoint.y >= thisOrigin.y && (poiPoint.y <= (thisOrigin.y+msgLabelSize.height) ) ) // point is within vertical space of msgLabel
 	{
 		// assume point is either to the left or to the right of the box
 		// (nothing else is meaningful; configure accordingly in Tips.plist)
-		if ( myPoint.x < myRect.origin.x )
+		if ( poiPoint.x < roundedRect.origin.x )
 		{
-			if ( myPoint.y < (msgLabel.frame.origin.y + msgLabel.frame.size.height/4 ) )
+			if ( poiPoint.y < (msgLabelOrigin.y + msgLabelSize.height/4 ) )
 			{
-				[path moveToPoint:CGPointMake(myRect.origin.x , (myRect.origin.y + kCornerRadius) )];
-				[path addLineToPoint:myPoint];
-				[path addLineToPoint:CGPointMake(myRect.origin.x , (myRect.origin.y + 2*kCornerRadius) )];
+				[path moveToPoint:CGPointMake(roundedRect.origin.x , (roundedRect.origin.y + kCornerRadius) )];
+				[path addLineToPoint:poiPoint];
+				[path addLineToPoint:CGPointMake(roundedRect.origin.x , (roundedRect.origin.y + 2*kCornerRadius) )];
 			}
-			else if (myPoint.y < (msgLabel.frame.origin.y + 3*myRect.size.height/4) )
+			else if (poiPoint.y < (msgLabelOrigin.y + 3*roundedRect.size.height/4) )
 			{
-				[path moveToPoint:CGPointMake(myRect.origin.x , (myRect.origin.y + myRect.size.height/2 - kCornerRadius/2) )];
-				[path addLineToPoint:myPoint];
-				[path addLineToPoint:CGPointMake(myRect.origin.x , (myRect.origin.y + myRect.size.height/2 + kCornerRadius/2) )];
+				[path moveToPoint:CGPointMake(roundedRect.origin.x , (roundedRect.origin.y + roundedRect.size.height/2 - kCornerRadius/2) )];
+				[path addLineToPoint:poiPoint];
+				[path addLineToPoint:CGPointMake(roundedRect.origin.x , (roundedRect.origin.y + roundedRect.size.height/2 + kCornerRadius/2) )];
 			}
 			else
 			{
-				[path moveToPoint:CGPointMake(myRect.origin.x , (myRect.origin.y + myRect.size.height - 2*kCornerRadius) )];
-				[path addLineToPoint:myPoint];
-				[path addLineToPoint:CGPointMake(myRect.origin.x , (myRect.origin.y + myRect.size.height/2 - kCornerRadius) )];
+				[path moveToPoint:CGPointMake(roundedRect.origin.x , (roundedRect.origin.y + roundedRect.size.height - 2*kCornerRadius) )];
+				[path addLineToPoint:poiPoint];
+				[path addLineToPoint:CGPointMake(roundedRect.origin.x , (roundedRect.origin.y + roundedRect.size.height/2 - kCornerRadius) )];
 			}
-
 		}
-		else if (myPoint.x > (myRect.origin.x + myRect.size.width) )
+		else if (poiPoint.x > (roundedRect.origin.x + roundedRect.size.width) )
 		{
-			if ( myPoint.y < (msgLabel.frame.origin.y + msgLabel.frame.size.height/4 ) )
+			if ( poiPoint.y < (msgLabelOrigin.y + msgLabelSize.height/4 ) )
 			{
-				[path moveToPoint:CGPointMake(myRect.origin.x + myRect.size.width , (myRect.origin.y + kCornerRadius) )];
-				[path addLineToPoint:myPoint];
-				[path addLineToPoint:CGPointMake(myRect.origin.x + myRect.size.width , (myRect.origin.y + 2*kCornerRadius) )];
+				[path moveToPoint:CGPointMake(roundedRect.origin.x + roundedRect.size.width , (roundedRect.origin.y + kCornerRadius) )];
+				[path addLineToPoint:poiPoint];
+				[path addLineToPoint:CGPointMake(roundedRect.origin.x + roundedRect.size.width , (roundedRect.origin.y + 2*kCornerRadius) )];
 			}
-			else if (myPoint.y < (myRect.origin.y + 3*myRect.size.height/4) )
+			else if (poiPoint.y < (roundedRect.origin.y + 3*roundedRect.size.height/4) )
 			{
-				[path moveToPoint:CGPointMake(myRect.origin.x + myRect.size.width , (myRect.origin.y + myRect.size.height/2 - kCornerRadius/2) )];
-				[path addLineToPoint:myPoint];
-				[path addLineToPoint:CGPointMake(myRect.origin.x + myRect.size.width , (myRect.origin.y + myRect.size.height/2 + kCornerRadius/2) )];
+				[path moveToPoint:CGPointMake(roundedRect.origin.x + roundedRect.size.width , (roundedRect.origin.y + roundedRect.size.height/2 - kCornerRadius/2) )];
+				[path addLineToPoint:poiPoint];
+				[path addLineToPoint:CGPointMake(roundedRect.origin.x + roundedRect.size.width , (roundedRect.origin.y + roundedRect.size.height/2 + kCornerRadius/2) )];
 			}
 			else
 			{
-				[path moveToPoint:CGPointMake(myRect.origin.x + myRect.size.width , (myRect.origin.y + myRect.size.height - 2*kCornerRadius) )];
-				[path addLineToPoint:myPoint];
-				[path addLineToPoint:CGPointMake(myRect.origin.x + myRect.size.width , (myRect.origin.y + myRect.size.height - kCornerRadius) )];
+				[path moveToPoint:CGPointMake(roundedRect.origin.x + roundedRect.size.width , (roundedRect.origin.y + roundedRect.size.height - 2*kCornerRadius) )];
+				[path addLineToPoint:poiPoint];
+				[path addLineToPoint:CGPointMake(roundedRect.origin.x + roundedRect.size.width , (roundedRect.origin.y + roundedRect.size.height - kCornerRadius) )];
 			}
 		}
 	}
-	else if ( myPoint.y > (myOrigin.y + myRect.size.height) ) // conditional maybe unnecessary, no other possibility
+	else if ( poiPoint.y > (thisOrigin.y + roundedRect.size.height) ) // conditional maybe unnecessary, no other possibility
 	{
-		if ( myPoint.x <= (msgLabel.frame.origin.x + msgLabel.frame.size.width/4) )
-		{ NSLog(@"first option");
-			[path moveToPoint:CGPointMake(myRect.origin.x + kCornerRadius , myRect.origin.y + myRect.size.height )];
-			[path addLineToPoint:myPoint];
-			[path addLineToPoint:CGPointMake(msgLabel.frame.origin.x + kCornerRadius, myRect.origin.y + myRect.size.height)];
+		if ( poiPoint.x <= (msgLabelOrigin.x + msgLabelSize.width/4) )
+		{
+			[path moveToPoint:CGPointMake(roundedRect.origin.x + kCornerRadius , roundedRect.origin.y + roundedRect.size.height )];
+			[path addLineToPoint:poiPoint];
+			[path addLineToPoint:CGPointMake(msgLabelOrigin.x + kCornerRadius, roundedRect.origin.y + roundedRect.size.height)];
 		}
-		else if ( myPoint.x <= (msgLabel.frame.origin.x + 3*msgLabel.frame.size.width/4) )
-		{ NSLog(@"second option");
-			[path moveToPoint:CGPointMake(myRect.origin.x + myRect.size.width/2 - kCornerRadius/2, myRect.origin.y + myRect.size.height)];
-			[path addLineToPoint:myPoint];
-			[path addLineToPoint:CGPointMake(myRect.origin.x + myRect.size.width/2 + kCornerRadius/2, myRect.origin.y + myRect.size.height)];
+		else if ( poiPoint.x <= (msgLabelOrigin.x + 3*msgLabelSize.width/4) )
+		{
+			[path moveToPoint:CGPointMake(roundedRect.origin.x + roundedRect.size.width/2 - kCornerRadius/2, roundedRect.origin.y + roundedRect.size.height)];
+			[path addLineToPoint:poiPoint];
+			[path addLineToPoint:CGPointMake(roundedRect.origin.x + roundedRect.size.width/2 + kCornerRadius/2, roundedRect.origin.y + roundedRect.size.height)];
 		}
-		else if ( myPoint.x > (msgLabel.frame.origin.x + 3*msgLabel.frame.size.width/4) )
-		{ NSLog(@"third option");
-			[path moveToPoint:CGPointMake(msgLabel.frame.origin.x + msgLabel.frame.size.width - kCornerRadius, myRect.origin.y + myRect.size.height)];
-			[path addLineToPoint:myPoint];
-			[path addLineToPoint:CGPointMake(myRect.origin.x + myRect.size.width - kCornerRadius, myRect.origin.y + myRect.size.height)];
+		else if ( poiPoint.x > (msgLabelOrigin.x + 3*msgLabelSize.width/4) )
+		{
+			[path moveToPoint:CGPointMake(msgLabelOrigin.x + msgLabelSize.width - kCornerRadius, roundedRect.origin.y + roundedRect.size.height)];
+			[path addLineToPoint:poiPoint];
+			[path addLineToPoint:CGPointMake(roundedRect.origin.x + roundedRect.size.width - kCornerRadius, roundedRect.origin.y + roundedRect.size.height)];
 		}
 		else
 		{
-			NSLog(@"No option");
+			NSAssert(NO, @"This block should be logically unreachable.");
 		}
 	}
 
@@ -222,5 +247,8 @@
 
 }
 
-
+- (void)handleFailureInMethod:(SEL)selector object:(id)object file:(NSString *)fileName lineNumber:(NSInteger)line description:(NSString *)format
+{
+	NSLog(@"Exception: %@",format);
+}
 @end
