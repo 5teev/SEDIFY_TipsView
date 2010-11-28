@@ -34,5 +34,6 @@
 @end
 
 @protocol SEDIFY_TipsViewDelegate
+@optional
 - (void)tipsViewDidFinish:(SEDIFY_TipsView *)view;
 @end

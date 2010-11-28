@@ -26,7 +26,6 @@
 - (void) awakeFromNib
 {
 	[self setBackgroundColor:[UIColor clearColor]]; // this transparency allows the view underneath to show through wherever we don't explicitly draw something
-	[self setBackgroundColor:[UIColor colorWithRed:1 green:0.4 blue:0.2 alpha:0.7]]; // this transparency allows the view underneath to show through wherever we don't explicitly draw something
 	msgNum = 0;
 	includeShadow = YES; // set to NO to disable shadow (or set kShadowOffset to 0)
 	msgDict = [[NSDictionary alloc] initWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"Tips" ofType:@"plist"]];
