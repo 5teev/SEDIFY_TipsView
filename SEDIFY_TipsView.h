@@ -13,6 +13,7 @@
 @interface SEDIFY_TipsView : UIView {
 	UILabel * msgLabel;
 	NSDictionary * msgDict;
+	NSString * hintString;
 	int msgNum;
 	BOOL includeShadow;
 
@@ -23,6 +24,7 @@
 
 @property (assign,nonatomic) NSString * msg;
 
+- (void) initialize;
 - (void) setMessage;
 - (NSString *) msgForNum:(int)msgNumber;
 - (CGPoint) pointForNum:(int)msgNumber;

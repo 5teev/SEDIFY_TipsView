@@ -18,18 +18,25 @@
 
 - (id)initWithFrame:(CGRect)frame {
     if ((self = [super initWithFrame:frame])) {
-        // Initialization code
+		[self initialize];
     }
     return self;
 }
 
-- (void) awakeFromNib
+- (void) awakeFromNib // view might be created in Interface Builder
+{
+	[self initialize];
+}
+
+- (void) initialize
 {
 	[self setBackgroundColor:[UIColor clearColor]]; // this transparency allows the view underneath to show through wherever we don't explicitly draw something
+	[self setBackgroundColor:[UIColor colorWithRed:0 green:0 blue:128 alpha:0.1]];
 	msgNum = 0;
 	includeShadow = YES; // set to NO to disable shadow (or set kShadowOffset to 0)
 	msgDict = [[NSDictionary alloc] initWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"Tips" ofType:@"plist"]];
 
+	hintString = [[NSString alloc] initWithString:[msgDict valueForKey:@"hintString"]];
 	CGRect labelRect = CGRectMake(0, 0, 50, 20); // this will all be modified by setMessage
 	msgLabel = [[UILabel alloc] initWithFrame:labelRect];
 	[self addSubview:msgLabel];
@@ -37,8 +44,8 @@
 	// set first message
 	[self setMessage];
 }
-
 - (void)dealloc {
+	[hintString release];
 	[msgLabel release];
 	[msgDict release];
     [super dealloc];
@@ -48,6 +55,8 @@
 {
 	[[UIColor whiteColor] set];
 	[[UIColor blackColor] setStroke]; // stroke never used, see description for pathForMsgNum:
+
+	[hintString drawInRect:rect withFont:[UIFont systemFontOfSize:16] lineBreakMode:UILineBreakModeWordWrap alignment:UITextAlignmentCenter];
 
 	if ( includeShadow )
 	{
