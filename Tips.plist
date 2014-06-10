@@ -6,7 +6,7 @@
 	<array>
 		<dict>
 			<key>msg</key>
-			<string>Take a look at this spot: it is notable.</string>
+			<string>Have a look at this spot: it is notable.</string>
 			<key>xPoint</key>
 			<integer>20</integer>
 			<key>yPoint</key>
